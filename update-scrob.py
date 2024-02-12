@@ -2,7 +2,8 @@
 
 import pathlib
 import json
-import sys
+import shutil
+import time
 import os
 import unicodedata
 
@@ -15,7 +16,7 @@ class SongURL:
         self.artist = a
         self.track = t
         self.album = b
-        self.albumArtist = t
+        self.albumArtist = r
 
 class SongJSON:
     Song_Url = None
@@ -23,7 +24,7 @@ class SongJSON:
         self.Song_Url = SongURL(a, t, b, r)
 
     def toJSON(self, url):
-        return json.dumps({url : self.Song_Url}, default=lambda o: o.__dict__, sort_keys=False, indent=4)      
+        return json.dumps({url : self.Song_Url}, default=lambda o: o.__dict__, sort_keys=False, ensure_ascii=False)      
 
 class Song:
     Url = "url"
@@ -100,10 +101,20 @@ def check_path(path, is_dir):
     return os.path.exists(path)
 
 def compare(l1, l2, mode):
+    tmp = []
     for i in l1:
         for j in l2:
             if i.Url == j.Url:
                 combine(i, j, mode)
+                break
+    # this should be done in one loop but i cant atm
+    for i in l2:
+        for j in l1:
+            if i.Url == j.Url:
+                break
+        tmp.append(i)
+
+    return l1 + tmp
 
 def combine(el1, el2, mode):
     if mode == 'i':
@@ -150,20 +161,29 @@ def print_list(list):
     for i in range(len(list)):
         print(str(list[i]) + " " + str(i))
         
-def move(fp, mode, list_cm):
-    if mode == 'b':
-        fp = os.path.join(fp, "export.json")
+def move(fpd, fpi, mode, list_cm, fpb, fpc):
+    #if mode == 'b':
+    fp = os.path.join(fpb, "export.json")
     with open(fp, "w+", encoding="utf-8") as f:
+        f.write("{")
+        first = True
         for i in list_cm:
-            f.write(i.toJSON())
+            if first:
+                comma = ""
+                first = False
+            else:
+                comma = ","
+            f.write(comma + (i.toJSON()[1:-1]))
+        f.write("}")
 
-
-
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    shutil.move(fpi, os.path.join(fpd, "cache-" + timestr + ".json"))
+    shutil.move(fpc, os.path.join(fpd, "combined-" + timestr + ".json"))
+    shutil.move(fp , fpc)
 
 def main():
     BASE_PATH = pathlib.Path(__file__).parent.resolve()
     COMBINED_FILE = os.path.join(BASE_PATH, "combined.json")
-    print(COMBINED_FILE)
     # can be overridden, link to json/dir with jsons
     # [-p /link/to/file], cant use the combined file?
     IMPORT_FILE = os.path.join(BASE_PATH, "import/local-cache.json")
@@ -179,13 +199,11 @@ def main():
     
     list_im = load_list(IMPORT_FILE)
 
-    print_list(list_cm)
+    list_res = compare(list_cm, list_im, COMBINE_MODE)
 
-    print_list(list_im)
+    print_list(list_res)
 
-    compare(list_cm, list_im, COMBINE_MODE)
-
-    move(FINISH_PATH, MOVE_MODE, list_cm)
+    move(FINISH_PATH, IMPORT_FILE, MOVE_MODE, list_res, BASE_PATH, COMBINED_FILE)
 
 
 if __name__ == "__main__":
