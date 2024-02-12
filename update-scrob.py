@@ -6,6 +6,25 @@ import sys
 import os
 import unicodedata
 
+class SongURL:
+    artist = ""
+    track = ""
+    album = ""
+    albumArtist = ""
+    def __init__(self, a, t, b, r):
+        self.artist = a
+        self.track = t
+        self.album = b
+        self.albumArtist = t
+
+class SongJSON:
+    Song_Url = None
+    def __init__(self, a, t, b, r):
+        self.Song_Url = SongURL(a, t, b, r)
+
+    def toJSON(self, url):
+        return json.dumps({url : self.Song_Url}, default=lambda o: o.__dict__, sort_keys=False, indent=4)      
+
 class Song:
     Url = "url"
     Link = None
@@ -35,11 +54,14 @@ class Song:
         strlen = getlen(string)
         if strlen < padding_max:
             #this is horrible
-            string = string + " "*(padding_max - strlen) + self.Link
+            string = string + " "*(padding_max - strlen) +  "| " + self.Link
         else:
             pad_respective = padding_max - (strlen - len(string))
-            string = string[0:pad_respective-4] + "... " + self.Link
+            string = string[0:pad_respective-4] + "... | " + self.Link
         return string
+    
+    def toJSON(self):
+        return SongJSON(self.Artist, self.Title, self.Album, self.Album_Artist).toJSON(self.Url)
 
 def getlen(string):
     i = 0
@@ -70,7 +92,6 @@ def load_list(file_path):
             songs.append(s)
         
     return songs
-    
 
 
 def check_path(path, is_dir):
@@ -79,16 +100,16 @@ def check_path(path, is_dir):
     return os.path.exists(path)
 
 def compare(l1, l2, mode):
-    for i in l1.len:
-        for j in l2.len:
-            if i == j:
+    for i in l1:
+        for j in l2:
+            if i.Url == j.Url:
                 combine(i, j, mode)
 
 def combine(el1, el2, mode):
     if mode == 'i':
-        return el2
+        el1 = el2
     elif mode == 'e':
-        return el1
+        return
     else:
         manual_combine(el1, el2)
 
@@ -96,9 +117,18 @@ def manual_combine(el1, el2):
     # input check
     if input == 'e' or input == 'i':
         combine(el1, el2, input)
-    elif input == 'm':
+    elif input == 'c':
         # create a object field by field using manual_select and return it
-        print("todo")
+        title = input("Song Title")
+        artist = input("Artist")
+        album = input("Album")
+        albumartist = input("Album Artist")
+        el1 = Song(title, artist, album, albumartist)
+    elif input == 'm':
+        el1.Title = manual_select(el1.Title, el2.Title)
+        el1.Artist = manual_select(el1.Artist, el2.Artist)
+        el1.Album = manual_select(el1.Album, el2.Album)
+        el1.AlbumArtist = manual_select(el1.AlbumArtist, el2.AlbumArtist)
     else:
         print("wrong input")
         manual_combine(el1, el2)
@@ -117,9 +147,17 @@ def manual_select(at1, at2):
         manual_select(at1, at2)
 
 def print_list(list):
-    for i in list:
-        print(i)
-#def move(list, dir):
+    for i in range(len(list)):
+        print(str(list[i]) + " " + str(i))
+        
+def move(fp, mode, list_cm):
+    if mode == 'b':
+        fp = os.path.join(fp, "export.json")
+    with open(fp, "w+", encoding="utf-8") as f:
+        for i in list_cm:
+            f.write(i.toJSON())
+
+
 
 
 def main():
@@ -145,9 +183,9 @@ def main():
 
     print_list(list_im)
 
-    #compare(list_cm, list_im, COMBINE_MODE)
+    compare(list_cm, list_im, COMBINE_MODE)
 
-    #move(FINISH_PATH, MOVE_MODE)
+    move(FINISH_PATH, MOVE_MODE, list_cm)
 
 
 if __name__ == "__main__":
