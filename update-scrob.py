@@ -34,10 +34,11 @@ class Song:
 
         strlen = getlen(string)
         if strlen < padding_max:
+            #this is horrible
             string = string + " "*(padding_max - strlen) + self.Link
         else:
-            #string = string[0:padding_max-4] + "... " + self.Link
-            print("lol")
+            pad_respective = padding_max - (strlen - len(string))
+            string = string[0:pad_respective-4] + "... " + self.Link
         return string
 
 def getlen(string):
@@ -144,7 +145,7 @@ def main():
 
     print_list(list_im)
 
-    #compare (combined, imported, COMBINEMODE)
+    #compare(list_cm, list_im, COMBINE_MODE)
 
     #move(FINISH_PATH, MOVE_MODE)
 
