@@ -24,7 +24,7 @@ class SongJSON:
         self.Song_Url = SongURL(a, t, b, r)
 
     def toJSON(self, url):
-        return json.dumps({url : self.Song_Url}, default=lambda o: o.__dict__, sort_keys=False, ensure_ascii=False)      
+        return json.dumps({url : self.Song_Url}, default=lambda o: o.__dict__, sort_keys=False, ensure_ascii=False)
 
 class Song:
     Url = "url"
@@ -42,44 +42,54 @@ class Song:
         self.Album_Artist = album_artist
 
     def __str__(self):
-        padding_max = 80
+        padding_max = 60
         string = ""
         if self.Album_Artist == None:
             if self.Album == None:
-                string = f"< {self.Url} > | {self.Title} - {self.Artist}"
+                string = f"{self.Url} | {self.Title} - {self.Artist}"
             else:
-                string = f"< {self.Url} > | {self.Title} - {self.Artist}, {self.Album}"
+                string = f"{self.Url} | {self.Title} - {self.Artist}, {self.Album}"
         else:
-            string = f"< {self.Url} > | {self.Title} - {self.Artist}, {self.Album} - {self.Album_Artist}"
+            string = f" {self.Url} | {self.Title} - {self.Artist}, {self.Album} - {self.Album_Artist}"
 
-        strlen = getlen(string)
-        if strlen < padding_max:
-            #this is horrible
-            string = string + " "*(padding_max - strlen) +  "| " + self.Link
-        else:
-            pad_respective = padding_max - (strlen - len(string))
-            string = string[0:pad_respective-4] + "... | " + self.Link
+        string = setlen(string, padding_max) +  "| " + self.Link
         return string
 
     def toJSON(self):
         return SongJSON(self.Artist, self.Title, self.Album, self.Album_Artist).toJSON(self.Url)
 
-def getlen(string):
+def setlen(string, padding_max):
+    #todo refactor
     i = 0
-    hw = 0
-    for char in string:
-        char_type = unicodedata.east_asian_width(char)
-        if char_type == 'W':
+    for j in range(len(string)):
+        step = 0
+        char_type = unicodedata.east_asian_width(string[j])
+        if char_type == 'W' or char_type == 'F':
             i = i + 2
-        elif char_type == 'H':
-            if hw == 1:
-                hw = 0
-            else:
-                hw = 1
-                i = i + 1
+            step = 1
+        #elif char_type == 'H':
+        #    if hw == 1:
+        #        hw = 0
+        #    else:
+        #        hw = 1
+        #        i = i + 1
         else:
             i = i + 1
-    return i
+
+        #edgecases because we cant have nice things
+        if i >= padding_max:
+            if padding_max == i and step == 1:
+                return string[0:j] + ">"
+            elif padding_max < i and step == 1:
+                ct = unicodedata.east_asian_width(string[j-1])
+                if ct == 'W' or ct == 'F':
+                    return string[0:j-1] + " >"
+                else:
+                    return string[0:j-1] + ">"
+            else:
+                return string[0:j-1] + ">"
+
+    return string + " "*(padding_max-i-1)
 
 def load_list(file_path):
     if not check_path(file_path, False):
