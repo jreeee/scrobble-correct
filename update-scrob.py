@@ -1,4 +1,4 @@
-#! /bin/env/python3
+#! /usr/bin/env python3
 
 import pathlib
 import json
@@ -40,7 +40,7 @@ class Song:
         self.Artist = artist
         self.Album = album
         self.Album_Artist = album_artist
-        
+
     def __str__(self):
         padding_max = 80
         string = ""
@@ -60,7 +60,7 @@ class Song:
             pad_respective = padding_max - (strlen - len(string))
             string = string[0:pad_respective-4] + "... | " + self.Link
         return string
-    
+
     def toJSON(self):
         return SongJSON(self.Artist, self.Title, self.Album, self.Album_Artist).toJSON(self.Url)
 
@@ -91,7 +91,7 @@ def load_list(file_path):
         for i in entries:
             s = Song(i, entries[i]["track"], entries[i]["artist"], entries[i]["album"], entries[i]["albumArtist"])
             songs.append(s)
-        
+
     return songs
 
 
@@ -103,16 +103,14 @@ def check_path(path, is_dir):
 def compare(l1, l2, mode):
     tmp = []
     for i in l1:
+        unique = True
         for j in l2:
             if i.Url == j.Url:
+                unique = False
                 combine(i, j, mode)
                 break
-    # this should be done in one loop but i cant atm
-    for i in l2:
-        for j in l1:
-            if i.Url == j.Url:
-                break
-        tmp.append(i)
+        if unique:
+            tmp.append(i)
 
     return l1 + tmp
 
@@ -160,21 +158,21 @@ def manual_select(at1, at2):
 def print_list(list):
     for i in range(len(list)):
         print(str(list[i]) + " " + str(i))
-        
+
 def move(fpd, fpi, mode, list_cm, fpb, fpc):
     #if mode == 'b':
     fp = os.path.join(fpb, "export.json")
     with open(fp, "w+", encoding="utf-8") as f:
-        f.write("{")
+        f.write("{\n")
         first = True
         for i in list_cm:
             if first:
                 comma = ""
                 first = False
             else:
-                comma = ","
+                comma = ",\n"
             f.write(comma + (i.toJSON()[1:-1]))
-        f.write("}")
+        f.write("\n}")
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
     shutil.move(fpi, os.path.join(fpd, "cache-" + timestr + ".json"))
@@ -196,7 +194,7 @@ def main():
     #input handeling
 
     list_cm = load_list(COMBINED_FILE)
-    
+
     list_im = load_list(IMPORT_FILE)
 
     list_res = compare(list_cm, list_im, COMBINE_MODE)
