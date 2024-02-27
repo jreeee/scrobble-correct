@@ -207,11 +207,15 @@ def main():
 
     list_im = load_list(IMPORT_FILE)
 
-    list_res = compare(list_cm, list_im, COMBINE_MODE)
+    #combine lists
+    list_res = compare(list_im, list_cm, COMBINE_MODE)
 
-    print_list(list_res)
+    #eliminate double elements
+    list_fin = compare(list_res, list_res, COMBINE_MODE) 
 
-    move(FINISH_PATH, IMPORT_FILE, MOVE_MODE, list_res, BASE_PATH, COMBINED_FILE)
+    print_list(list_fin)
+
+    move(FINISH_PATH, IMPORT_FILE, MOVE_MODE, list_fin, BASE_PATH, COMBINED_FILE)
 
 
 if __name__ == "__main__":
