@@ -117,19 +117,19 @@ def check_path(path, is_dir):
     return os.path.exists(path)
 
 def compare(l1, l2, mode):
-    new_songs = []
-    exs_songs = []
-    for i in l1:
+    combined = l1 + l2
+    res = []
+    for i in combined:
         unique = True
-        for j in l2:
+        for j in res:
             if i.Url == j.Url:
                 unique = False
-                exs_songs.append(combine(i, j, mode))
+                j = (combine(i, j, mode))
                 break
         if unique:
-            new_songs.append(i)
+            res.append(i)
 
-    return exs_songs + new_songs
+    return res
 
 def combine(el1, el2, mode):
     if mode == 'i':
