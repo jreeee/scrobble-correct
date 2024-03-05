@@ -44,15 +44,21 @@ class Song:
     def __str__(self):
         padding_max = 60
         string = ""
+        url = self.Url
+        link = self.Link
+        if len(url) > 11:
+            url = "-Playlist--"
+            link = self.Url
+
         if self.Album_Artist == None:
             if self.Album == None:
-                string = f"{self.Url} | {self.Title} - {self.Artist}"
+                string = f"{url} | {self.Title} - {self.Artist}"
             else:
-                string = f"{self.Url} | {self.Title} - {self.Artist}, {self.Album}"
+                string = f"{url} | {self.Title} - {self.Artist}, {self.Album}"
         else:
-            string = f" {self.Url} | {self.Title} - {self.Artist}, {self.Album} - {self.Album_Artist}"
+            string = f" {url} | {self.Title} - {self.Artist}, {self.Album} - {self.Album_Artist}"
 
-        string = setlen(string, padding_max) +  "| " + self.Link
+        string = setlen(string, padding_max) +  "| " + link
         return string
 
     def toJSON(self):
@@ -111,24 +117,25 @@ def check_path(path, is_dir):
     return os.path.exists(path)
 
 def compare(l1, l2, mode):
-    tmp = []
+    new_songs = []
+    exs_songs = []
     for i in l1:
         unique = True
         for j in l2:
             if i.Url == j.Url:
                 unique = False
-                combine(i, j, mode)
+                exs_songs.append(combine(i, j, mode))
                 break
         if unique:
-            tmp.append(i)
+            new_songs.append(i)
 
-    return l1 + tmp
+    return exs_songs + new_songs
 
 def combine(el1, el2, mode):
     if mode == 'i':
-        el1 = el2
+        return el1
     elif mode == 'e':
-        return
+        return el2
     else:
         manual_combine(el1, el2)
 
@@ -142,12 +149,15 @@ def manual_combine(el1, el2):
         artist = input("Artist")
         album = input("Album")
         albumartist = input("Album Artist")
-        el1 = Song(title, artist, album, albumartist)
+        return Song(title, artist, album, albumartist)
     elif input == 'm':
-        el1.Title = manual_select(el1.Title, el2.Title)
-        el1.Artist = manual_select(el1.Artist, el2.Artist)
-        el1.Album = manual_select(el1.Album, el2.Album)
-        el1.AlbumArtist = manual_select(el1.AlbumArtist, el2.AlbumArtist)
+        tmp = Song()
+        tmp.Title = manual_select(el1.Title, el2.Title)
+        tmp.Artist = manual_select(el1.Artist, el2.Artist)
+        tmp.Album = manual_select(el1.Album, el2.Album)
+        tmp.AlbumArtist = manual_select(el1.AlbumArtist, el2.AlbumArtist)
+        tmp.Url = el1.Url
+        return tmp
     else:
         print("wrong input")
         manual_combine(el1, el2)
@@ -210,12 +220,9 @@ def main():
     #combine lists
     list_res = compare(list_im, list_cm, COMBINE_MODE)
 
-    #eliminate double elements
-    list_fin = compare(list_res, list_res, COMBINE_MODE) 
+    print_list(list_res)
 
-    print_list(list_fin)
-
-    move(FINISH_PATH, IMPORT_FILE, MOVE_MODE, list_fin, BASE_PATH, COMBINED_FILE)
+    move(FINISH_PATH, IMPORT_FILE, MOVE_MODE, list_res, BASE_PATH, COMBINED_FILE)
 
 
 if __name__ == "__main__":
